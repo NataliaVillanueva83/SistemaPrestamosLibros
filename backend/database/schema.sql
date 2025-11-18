@@ -32,7 +32,6 @@ CREATE TABLE prestamos (
     fecha_devolucion_esperada DATE NOT NULL,
     fecha_devolucion_real DATETIME,
     estado ENUM('activo', 'devuelto', 'vencido') DEFAULT 'activo',
-    observaciones TEXT,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
     FOREIGN KEY (libro_id) REFERENCES libros(id) ON DELETE CASCADE,
     INDEX idx_libro_cliente (libro_id, cliente_id)
