@@ -1,0 +1,15 @@
+# Dependencias
+node_modules/
+# Archivos de entorno
+.env
+# Archivos de logs
+logs/
+*.log
+# Directorio de construcción
+dist/
+build/
+# Archivos temporales de nodemon
+.nodemonignore  
+
+# Configuración de IDE
+.vscode/
