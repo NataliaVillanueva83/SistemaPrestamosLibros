@@ -215,7 +215,7 @@ exports.deleteLibro = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         
-        // ✅ MEJORA: Validar ID
+        //  Validar ID
         if (isNaN(id) || id <= 0) {
             return res.status(400).json({ error: 'ID inválido' });
         }
@@ -250,7 +250,7 @@ exports.deleteLibro = async (req, res) => {
     } catch (err) {
         console.error('Error en deleteLibro:', err);
         
-        // Por si decides usar DELETE físico y hay restricciones FK
+        //  usar DELETE físico y hay restricciones FK
         if (err.errno === 1451) {
             return res.status(400).json({ 
                 error: 'No se puede eliminar el libro porque tiene préstamos asociados' 
@@ -259,4 +259,5 @@ exports.deleteLibro = async (req, res) => {
         
         res.status(500).json({ error: err.message });
     }
+
 };

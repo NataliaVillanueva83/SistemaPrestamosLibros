@@ -60,4 +60,53 @@ exports.createCliente = async (req, res) => {
         console.error('Error en createCliente:', err);
         res.status(500).json({ error: err.message });
     }
+//Uṕdate cliente
+exports.updateCliente = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({ error: 'ID inválido' });
+        }
+
+        const { nombre, apellido, email, telefono, dni } = req.body;
+
+        const [result] = await db.query(
+            'UPDATE clientes SET nombre = ?, apellido = ?, email = ?, telefono = ?, dni = ? WHERE id = ?',
+            [nombre, apellido, email, telefono, dni, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Cliente no encontrado' });
+        }
+
+        res.json({ id, nombre, apellido, email, telefono, dni });
+    } catch (err) {
+        console.error('Error en updateCliente:', err);
+        res.status(500).json({ error: err.message });
+    }
+    //DELETE /clientes/:id : eliminar un cliente
+exports.deleteCliente = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id) || id <= 0) {
+            return res.status(400).json({ error: 'ID inválido' });
+        }
+
+        const [result] = await db.query(
+            'DELETE FROM clientes WHERE id = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Cliente no encontrado' });
+        }
+
+        res.status(204).send();
+    } catch (err) {
+        console.error('Error en deleteCliente:', err);
+        res.status(500).json({ error: err.message });
+    }   
+};
+        res.status(500).json({ error: err.message });
+    }
 };
