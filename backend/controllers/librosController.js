@@ -15,7 +15,7 @@ exports.getLibros = async (req, res) => {
         const [rows] = await db.query(query);
         res.json(rows);
     } catch (err) {
-        console.error('Error en getLibros:', err); /
+        console.error('Error en getLibros:', err); 
         res.status(500).json({ error: err.message });
     }
 };
@@ -95,8 +95,8 @@ exports.createLibro = async (req, res) => {
             generoLimpio,
             isbnLimpio,
             precioNumerico,
-            ejemplares,
-            ejemplares
+            ejemplaresNum,
+            ejemplaresNum 
         ]);
         
         //  Devolver el objeto creado completo

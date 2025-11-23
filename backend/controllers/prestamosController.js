@@ -128,16 +128,15 @@ exports.devolverPrestamo = async (req, res) => {
         if (prestamo.estado === 'devuelto') {
             return res.status(400).json({ error: 'El préstamo ya ha sido devuelto' });
         }
-
       const [resultPrestamo] = await db.query(
             'UPDATE prestamos SET estado = ?, fecha_devolucion_real = ? WHERE id = ?',
             ['devuelto', fecha_devolucion_real, id]
         );
-        await db.query(
+    await db.query(
              'UPDATE libros SET ejemplares_disponibles = ejemplares_disponibles + 1 WHERE id = ?',
             [prestamo.libro_id]
         );
-        res.json({ 
+    res.json({ 
             message: 'Devolución registrada exitosamente', 
             id_prestamo: id,
             libro_id: prestamo.libro_id,
@@ -190,7 +189,7 @@ exports.updatePrestamo = async (req, res) => {
         const nuevoLibroId = libro_id || prestamoActual.libro_id;
         const nuevaFechaPrestamo = fecha_prestamo || prestamoActual.fecha_prestamo;
         const nuevaFechaDevolucion = fecha_devolucion_esperada || prestamoActual.fecha_devolucion_esperada;
-o
+
         await db.query(
             'UPDATE prestamos SET cliente_id = ?, libro_id = ?, fecha_prestamo = ?, fecha_devolucion_esperada = ? WHERE id = ?',
             [nuevoClienteId, nuevoLibroId, nuevaFechaPrestamo, nuevaFechaDevolucion, id]
@@ -209,7 +208,7 @@ o
     }
 };
 
-//get consultas de prestamos por cliente
+//get consultas de prestamos por cliente (historial completo)
 exports.getPrestamosByClienteId = async (req, res) => {
     try {
         const clienteId = parseInt(req.params.clienteId);
@@ -232,6 +231,38 @@ exports.getPrestamosByClienteId = async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error('Error en getPrestamosByClienteId:', err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// GET /prestamos/cliente/:clienteId/activos : Listar préstamos activos de un cliente
+exports.getPrestamosActivosPorCliente = async (req, res) => {
+    try {
+        const clienteId = parseInt(req.params.clienteId);
+        
+        if (isNaN(clienteId) || clienteId <= 0) {
+            return res.status(400).json({ error: 'ID de cliente inválido' });
+        }
+
+        
+        const query = `
+            SELECT 
+                p.id, p.fecha_prestamo, p.fecha_devolucion_esperada,
+                l.titulo, l.autor, l.genero, l.isbn
+            FROM prestamos p
+            JOIN libros l ON p.libro_id = l.id
+            WHERE p.cliente_id = ? AND p.estado = 'activo'
+            ORDER BY p.fecha_devolucion_esperada ASC
+        `;
+        const [rows] = await db.query(query, [clienteId]);
+
+        res.json({
+            cliente_id: clienteId,
+            total_prestamos_activos: rows.length, 
+            prestamos: rows
+        });
+    } catch (err) {
+        console.error('Error en getPrestamosActivosPorCliente:', err);
         res.status(500).json({ error: err.message });
     }
 };

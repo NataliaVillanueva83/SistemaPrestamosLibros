@@ -10,7 +10,8 @@ CREATE TABLE libros (
     isbn VARCHAR(20) UNIQUE,
     precio DECIMAL(10,2),
     ejemplares_totales INT DEFAULT 1,
-    ejemplares_disponibles INT DEFAULT 1
+    ejemplares_disponibles INT DEFAULT 1,
+    activo BOOLEAN DEFAULT TRUE
 );
 
 -- Tabla de clientes

@@ -60,6 +60,7 @@ exports.createCliente = async (req, res) => {
         console.error('Error en createCliente:', err);
         res.status(500).json({ error: err.message });
     }
+};
 //Uṕdate cliente
 exports.updateCliente = async (req, res) => {
     try {
@@ -84,6 +85,7 @@ exports.updateCliente = async (req, res) => {
         console.error('Error en updateCliente:', err);
         res.status(500).json({ error: err.message });
     }
+};
     //DELETE /clientes/:id : eliminar un cliente
 exports.deleteCliente = async (req, res) => {
     try {
@@ -107,6 +109,4 @@ exports.deleteCliente = async (req, res) => {
         res.status(500).json({ error: err.message });
     }   
 };
-        res.status(500).json({ error: err.message });
-    }
-};
+   
