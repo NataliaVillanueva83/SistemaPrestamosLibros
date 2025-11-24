@@ -11,7 +11,8 @@ CREATE TABLE libros (
     precio DECIMAL(10,2),
     ejemplares_totales INT DEFAULT 1,
     ejemplares_disponibles INT DEFAULT 1,
-    activo BOOLEAN DEFAULT TRUE
+    activo BOOLEAN DEFAULT TRUE,
+    imagen_url VARCHAR(500),
 );
 
 -- Tabla de clientes

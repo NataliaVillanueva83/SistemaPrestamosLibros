@@ -2,13 +2,28 @@ const db = require('../config/db');
 //GET /prestamos/ : listar todos los préstamos
 exports.getPrestamos = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM prestamos ORDER BY fecha_prestamo DESC');
+       
+        const query = `
+            SELECT 
+                p.id, 
+                p.fecha_prestamo, 
+                p.estado,
+                l.titulo AS libro_titulo, 
+                c.nombre AS cliente_nombre, 
+                c.apellido AS cliente_apellido
+            FROM prestamos p
+            JOIN libros l ON p.libro_id = l.id
+            JOIN clientes c ON p.cliente_id = c.id
+            ORDER BY p.fecha_prestamo DESC
+        `;
+        const [rows] = await db.query(query);
         res.json(rows);
     } catch (err) {
         console.error('Error en getPrestamos:', err);
         res.status(500).json({ error: err.message });
     }
 };
+
 
 //GET /prestamos/:id : obtener un préstamo por ID
 exports.getPrestamoById = async (req, res) => {

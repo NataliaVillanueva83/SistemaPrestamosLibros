@@ -69,6 +69,9 @@ exports.createLibro = async (req, res) => {
         const isbnLimpio = isbn ? isbn.trim() : null;
         const precioNumerico = precio ? parseFloat(precio) : null;
         
+        const ejemplaresNum = ejemplares_totales ? parseInt(ejemplares_totales) : 1;
+
+        
         //  Verificar si el ISBN ya existe
         if (isbnLimpio) {
             const [existente] = await db.query(
