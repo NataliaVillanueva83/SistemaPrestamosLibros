@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca - Libros</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="brand"><h1>🏫 Biblioteca</h1></div>
+            <div class="nav-links">
+                <a href="libros.html" class="nav-btn active"><span class="material-symbols-outlined">menu_book</span> Libros</a>
+                <a href="clientes.html" class="nav-btn"><span class="material-symbols-outlined">groups</span> Alumnos</a>
+                <a href="prestamos.html" class="nav-btn"><span class="material-symbols-outlined">assignment_return</span> Préstamos</a>
+            </div>
+            <div class="search-box">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="buscador" placeholder="Buscar libro..." onkeyup="filtrarLibros()">
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header-section">
+            <h2>Inventario de Libros</h2>
+            <button class="btn btn-primary" onclick="abrirModalLibro()">+ Nuevo Libro</button>
+        </div>
+        
+        <div id="contenedor-libros" class="grid-container">
+            </div>
+    </div>
+
+    <div id="modal-libro" class="modal">
+        <div class="modal-content paper-style">
+            <span class="close" onclick="document.getElementById('modal-libro').style.display='none'">&times;</span>
+            <h3 id="titulo-modal-libro">📖 Libro</h3>
+            
+            <form id="form-libro" onsubmit="guardarLibro(event)">
+                <input type="hidden" id="libro-id">
+                
+                <div class="form-group">
+                    <label>Título:</label>
+                    <input type="text" id="lib-titulo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Autor:</label>
+                    <input type="text" id="lib-autor" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Género:</label>
+                    <input type="text" id="lib-genero">
+                </div>
+
+                <div class="form-group">
+                    <label>ISBN:</label>
+                    <input type="text" id="lib-isbn">
+                </div>
+
+                <div class="form-group">
+                    <label>Precio:</label>
+                    <input type="number" id="lib-precio" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Total Ejemplares:</label>
+                    <input type="number" id="lib-total" required min="1" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>URL Portada:</label>
+                    <input type="text" id="lib-img" placeholder="https://...">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-prestamo" class="modal">
+        <div class="modal-content paper-style">
+            <span class="close" onclick="document.getElementById('modal-prestamo').style.display='none'">&times;</span>
+            <h3>🎒 Nuevo Préstamo</h3>
+            <p>Libro: <strong id="prestamo-titulo-libro" style="color: var(--primary-color)"></strong></p>
+            
+            <form id="form-prestamo" onsubmit="guardarPrestamo(event)">
+                <input type="hidden" id="prestamo-libro-id">
+                
+                <div class="form-group">
+                    <label>Alumno:</label>
+                    <select id="prestamo-cliente-id" required class="w-100">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="date" id="prestamo-fecha" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Confirmar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-exito" class="modal" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 5px solid var(--success-color);">
+            <div style="margin-bottom: 15px;">
+                <span class="material-symbols-outlined" style="font-size: 48px; color: var(--success-color);">check_circle</span>
+            </div>
+            
+            <h3 style="margin-bottom: 10px; color: #333;">¡Listo!</h3>
+            <p id="mensaje-exito" style="color: #666; margin-bottom: 25px; line-height: 1.5;"></p>
+            
+            <button class="btn" style="background-color: var(--success-color); color: white; width: 100%;" 
+                    onclick="document.getElementById('modal-exito').style.display='none'">
+                Aceptar
+            </button>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/libros.js"></script>
+</body>
+</html>

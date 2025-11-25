@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Biblioteca - Préstamos</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="brand"><h1>🏫 Biblioteca</h1></div>
+            <div class="nav-links">
+                <a href="libros.html" class="nav-btn"><span class="material-symbols-outlined">menu_book</span> Libros</a>
+                <a href="clientes.html" class="nav-btn"><span class="material-symbols-outlined">groups</span> Alumnos</a>
+                <a href="prestamos.html" class="nav-btn active"><span class="material-symbols-outlined">assignment_return</span> Préstamos</a>
+            </div>
+            <div class="search-box">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="buscador" placeholder="Buscar préstamo..." onkeyup="filtrarPrestamos()">
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header-section">
+            <h2>Gestión de Préstamos Activos</h2>
+        </div>
+        
+        <div class="card table-card">
+            <table class="book-table">
+                <thead>
+                    <tr>
+                        <th>Alumno</th>
+                        <th>Libro</th>
+                        <th>Fecha Préstamo</th>
+                        <th>Estado</th>
+                        <th style="text-align: right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-prestamos">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-confirmacion" class="modal" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 350px; text-align: center; border-top: 5px solid var(--primary-color);">
+            <div style="font-size: 50px; margin-bottom: 10px;">🤔</div>
+            <h3 style="margin-bottom: 10px;">¿Devolución?</h3>
+            <p id="texto-confirmacion" style="color: #666; margin-bottom: 20px;">Confirmar la recepción del libro.</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn" style="background: #ccc;" onclick="cerrarModal('modal-confirmacion')">Cancelar</button>
+                <button class="btn btn-primary" id="btn-confirmar-accion">Sí, Devolver</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-editar-prestamo" class="modal">
+        <div class="modal-content paper-style">
+            <span class="close" onclick="cerrarModal('modal-editar-prestamo')">&times;</span>
+            <h3>✏️ Corregir Fecha</h3>
+            <form id="form-editar-prestamo" onsubmit="guardarEdicionPrestamo(event)">
+                <input type="hidden" id="edit-prestamo-id">
+                <div class="form-group">
+                    <label>Fecha de Préstamo:</label>
+                    <input type="date" id="edit-prestamo-fecha" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/prestamos.js"></script>
+</body>
+</html>

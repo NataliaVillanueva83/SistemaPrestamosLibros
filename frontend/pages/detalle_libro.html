@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Libro</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="brand">
+                <a href="libros.html" style="text-decoration:none; color:white; display:flex; align-items:center; gap:10px;">
+                    <span class="material-symbols-outlined">arrow_back</span> Volver a Libros
+                </a>
+            </div>
+            <div style="color:white; font-weight:bold;">Ficha Técnica</div>
+        </div>
+    </nav>
+
+    <div class="main-container" style="margin-top: 40px;">
+        <div class="card" style="display: grid; grid-template-columns: 300px 1fr; gap: 40px; padding: 30px;">
+            
+            <div style="text-align: center;">
+                <img id="det-img" src="" style="width: 100%; max-width:300px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); object-fit: contain; background: #f8f9fa;">
+                
+                <div style="margin-top: 20px;">
+                    <span id="det-badge" class="badge" style="font-size: 1em; padding: 8px 15px;"></span>
+                </div>
+            </div>
+
+            <div>
+                <h1 id="det-titulo" style="color: var(--primary-color); margin-bottom: 5px;">Cargando...</h1>
+                <h3 id="det-autor" style="color: #666; margin-bottom: 20px;"></h3>
+                
+                <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; font-size: 1.1em;">
+                    <div><strong>Género:</strong> <span id="det-genero"></span></div>
+                    <div><strong>ISBN:</strong> <span id="det-isbn"></span></div>
+                    <div><strong>Precio:</strong> $<span id="det-precio"></span></div>
+                    <div><strong>Total Ejemplares:</strong> <span id="det-total"></span></div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn btn-edit" onclick="editarLibroActual()">
+                        <span class="material-symbols-outlined">edit</span> Editar Datos
+                    </button>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-libro" class="modal">
+        <div class="modal-content paper-style">
+            <span class="close" onclick="document.getElementById('modal-libro').style.display='none'">&times;</span>
+            <h3>✏️ Editar Libro</h3>
+            
+            <form id="form-libro" onsubmit="guardarEdicionLibro(event)">
+                <input type="hidden" id="libro-id">
+                
+                <div class="form-group">
+                    <label>Título:</label>
+                    <input type="text" id="lib-titulo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Autor:</label>
+                    <input type="text" id="lib-autor" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Género:</label>
+                    <input type="text" id="lib-genero">
+                </div>
+
+                <div class="form-group">
+                    <label>ISBN:</label>
+                    <input type="text" id="lib-isbn">
+                </div>
+
+                <div class="form-group">
+                    <label>Precio:</label>
+                    <input type="number" id="lib-precio" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Total Ejemplares:</label>
+                    <input type="number" id="lib-total" required min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>URL Portada:</label>
+                    <input type="text" id="lib-img" placeholder="https://...">
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-exito" class="modal" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 5px solid var(--success-color);">
+            <div style="margin-bottom: 15px;">
+                <span class="material-symbols-outlined" style="font-size: 48px; color: var(--success-color);">check_circle</span>
+            </div>
+            
+            <h3 style="margin-bottom: 10px; color: #333;">¡Listo!</h3>
+            <p id="mensaje-exito" style="color: #666; margin-bottom: 25px; line-height: 1.5;"></p>
+            
+            <button class="btn" style="background-color: var(--success-color); color: white; width: 100%;" 
+                    onclick="document.getElementById('modal-exito').style.display='none'">
+                Aceptar
+            </button>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/detalle_libro.js"></script>
+</body>
+</html>
