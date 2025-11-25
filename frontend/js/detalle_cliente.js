@@ -38,9 +38,11 @@ async function cargarDatosCliente(id) {
 // --- CARGAR HISTORIAL ---
 async function cargarHistorialCliente(id) {
     const tbody = document.getElementById('tabla-historial-detalle');
+    const contador = document.getElementById('contador-historial');
     try {
         const res = await fetch(`${API_URL}/prestamos/cliente/${id}`);
         const data = await res.json();
+        contador.innerText = Array.isArray(data) ? data.length : 0;
         tbody.innerHTML = '';
         
         if (data.length === 0) {

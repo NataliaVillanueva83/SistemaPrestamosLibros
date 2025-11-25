@@ -19,17 +19,29 @@
         </div>
     </nav>
 
-    <div class="main-container" style="max-width: 900px;">
+   <div class="main-container" style="max-width: 900px;">
         
         <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px;">
             <div>
                 <h2 style="margin-bottom: 5px;">Préstamo #<span id="p-id"></span></h2>
                 <span id="p-estado" class="badge"></span>
             </div>
-            <button id="btn-devolver" class="btn" style="background: var(--danger-color); color: white; display: none;" onclick="devolverEstePrestamo()">
-                <span class="material-symbols-outlined" style="vertical-align: middle;">assignment_return</span> Registrar Devolución
-            </button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-edit" onclick="abrirModalEditar()">
+                    <span class="material-symbols-outlined">edit</span> Editar
+                </button>
+                
+                <button class="btn" style="background-color: var(--danger-color); color: white; display: flex; align-items: center; gap: 5px;" onclick="eliminarPrestamoFisico()">
+                    <span class="material-symbols-outlined">delete</span> Borrar
+                </button>
+
+                <button id="btn-devolver" class="btn" style="background: #f1c40f; color: black; display: none; font-weight:bold;" onclick="devolverEstePrestamo()">
+                    <span class="material-symbols-outlined" style="vertical-align: middle;">assignment_return</span> Registrar Devolución
+                </button>
+            </div>
         </div>
+       
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             
@@ -109,7 +121,99 @@
             </button>
         </div>
     </div>
+<div id="modal-editar" class="modal">
+        <div class="modal-content paper-style">
+            <span class="close" onclick="document.getElementById('modal-editar').style.display='none'">&times;</span>
+            <h3>✏️ Corregir Préstamo</h3>
+            <p style="font-size: 0.8em; color: #666; margin-bottom: 15px;">Corrige el libro, el alumno o la fecha.</p>
+            
+            <form onsubmit="guardarEdicion(event)">
+                <input type="hidden" id="edit-id">
+                
+                <div class="form-group">
+                    <label>Libro:</label>
+                    <select id="edit-libro-id" required class="w-100">
+                        <option value="">Cargando catálogo...</option>
+                    </select>
+                </div>
 
+                <div class="form-group">
+                    <label>Alumno:</label>
+                    <select id="edit-cliente-id" required class="w-100">
+                        <option value="">Cargando alumnos...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Fecha Préstamo:</label>
+                    <input type="date" id="edit-fecha" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Guardar Corrección</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-borrar" class="modal" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 5px solid var(--danger-color);">
+            <div style="margin-bottom: 15px;"><span class="material-symbols-outlined" style="font-size: 48px; color: var(--danger-color);">delete_forever</span></div>
+            <h3 style="margin-bottom: 10px; color: #333;">¿Eliminar Registro?</h3>
+            <p style="color: #666; margin-bottom: 25px;">Esta acción eliminará el préstamo permanentemente de la base de datos.<br><strong>El stock del libro se ajustará automáticamente.</strong></p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn" style="background: #ccc; color: #333;" onclick="document.getElementById('modal-borrar').style.display='none'">Cancelar</button>
+                <button class="btn" style="background: var(--danger-color); color: white;" onclick="confirmarEliminacionFisica()">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-alerta" class="modal" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 5px solid var(--danger-color);">
+            <div style="margin-bottom: 15px;"><span class="material-symbols-outlined" style="font-size: 48px; color: var(--danger-color);">warning</span></div>
+            <h3 style="margin-bottom: 10px;">Error</h3>
+            <p id="mensaje-alerta" style="color: #666; margin-bottom: 25px;"></p>
+            <button class="btn" style="background: #555; color: white; width: 100%;" onclick="document.getElementById('modal-alerta').style.display='none'">Entendido</button>
+        </div>
+    </div>
+    <div id="modal-editar" class="modal">
+        <div class="modal-content paper-style">
+            <span class="close" onclick="document.getElementById('modal-editar').style.display='none'">&times;</span>
+            <h3>✏️ Corregir Préstamo</h3>
+            <form onsubmit="guardarEdicion(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>Libro:</label>
+                    <select id="edit-libro-id" required class="w-100"><option value="">Cargando...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Alumno:</label>
+                    <select id="edit-cliente-id" required class="w-100"><option value="">Cargando...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha:</label>
+                    <input type="date" id="edit-fecha" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-exito" class="modal" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 5px solid var(--success-color);">
+            <div style="margin-bottom: 15px;"><span class="material-symbols-outlined" style="font-size: 48px; color: var(--success-color);">check_circle</span></div>
+            <h3 style="margin-bottom: 10px; color: #333;">¡Listo!</h3>
+            <p id="mensaje-exito" style="color: #666; margin-bottom: 25px;"></p>
+            <button class="btn" style="background-color: var(--success-color); color: white; width: 100%;" id="btn-cerrar-exito">Aceptar</button>
+        </div>
+    </div>
+
+    <div id="modal-alerta" class="modal" style="z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center; border-top: 5px solid var(--danger-color);">
+            <div style="margin-bottom: 15px;"><span class="material-symbols-outlined" style="font-size: 48px; color: var(--danger-color);">warning</span></div>
+            <h3 style="margin-bottom: 10px;">Error</h3>
+            <p id="mensaje-alerta" style="color: #666; margin-bottom: 25px;"></p>
+            <button class="btn" style="background-color: #555; color: white; width: 100%;" onclick="document.getElementById('modal-alerta').style.display='none'">Entendido</button>
+        </div>
+    </div>
     <script src="../js/config.js"></script>
     <script src="../js/detalle_prestamo.js"></script>
 </body>

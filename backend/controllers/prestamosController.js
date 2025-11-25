@@ -170,65 +170,73 @@ exports.devolverPrestamo = async (req, res) => {
     }
 };
 
-// PUT /prestamos/:id : Editar un préstamo existente (corregir errores)
+// PUT /prestamos/:id
 exports.updatePrestamo = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const { cliente_id, libro_id, fecha_prestamo, fecha_devolucion_esperada } = req.body;
+        // Convertimos a enteros para evitar errores de NaN o texto
+        const libro_id = req.body.libro_id ? parseInt(req.body.libro_id) : null;
+        const cliente_id = req.body.cliente_id ? parseInt(req.body.cliente_id) : null;
+        const fecha_prestamo = req.body.fecha_prestamo;
 
-        if (isNaN(id) || id <= 0) {
-            return res.status(400).json({ error: 'ID de préstamo inválido' });
-        }
+        if (isNaN(id)) return res.status(400).json({ error: 'ID de préstamo inválido' });
 
-        
+        //  Obtener el préstamo actual
         const [rows] = await db.query('SELECT * FROM prestamos WHERE id = ?', [id]);
+        if (rows.length === 0) return res.status(404).json({ error: 'Préstamo no encontrado' });
         
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'Préstamo no encontrado' });
-        }
-
         const prestamoActual = rows[0];
 
-        // si la modficacion es por el libro_id
+        // LÓGICA DE STOCK (Si cambió el libro)
+        // Solo si enviaron un libro nuevo Y es diferente al que ya estaba
         if (libro_id && libro_id !== prestamoActual.libro_id) {
-            // A. Verificar que el NUEVO libro tenga stock
+            // A. Verificar stock del nuevo libro
             const [nuevoLibro] = await db.query('SELECT ejemplares_disponibles FROM libros WHERE id = ?', [libro_id]);
-            if (nuevoLibro.length === 0 || nuevoLibro[0].ejemplares_disponibles <= 0) {
-                return res.status(400).json({ error: 'El nuevo libro seleccionado no tiene ejemplares disponibles' });
+            
+            if (nuevoLibro.length === 0) {
+                return res.status(400).json({ error: 'El libro seleccionado no existe.' });
+            }
+            if (nuevoLibro[0].ejemplares_disponibles <= 0) {
+                return res.status(400).json({ error: 'El nuevo libro no tiene stock disponible.' });
             }
 
-            //  Devolver stock al libro ANTERIOR (si el préstamo estaba activo)
+            // B. Si el préstamo está activo, movemos el stock
             if (prestamoActual.estado === 'activo') {
+                // Devolver 1 al libro viejo (que ya no se va a usar)
                 await db.query('UPDATE libros SET ejemplares_disponibles = ejemplares_disponibles + 1 WHERE id = ?', [prestamoActual.libro_id]);
-                
+                // Restar 1 al libro nuevo
                 await db.query('UPDATE libros SET ejemplares_disponibles = ejemplares_disponibles - 1 WHERE id = ?', [libro_id]);
             }
         }
 
-        //  Preparar datos para actualizar (usar los nuevos o mantener los viejos)
-        const nuevoClienteId = cliente_id || prestamoActual.cliente_id;
-        const nuevoLibroId = libro_id || prestamoActual.libro_id;
-        const nuevaFechaPrestamo = fecha_prestamo || prestamoActual.fecha_prestamo;
-        const nuevaFechaDevolucion = fecha_devolucion_esperada || prestamoActual.fecha_devolucion_esperada;
+        // PREPARAR DATOS FINALES
+        const finalCliente = cliente_id || prestamoActual.cliente_id;
+        const finalLibro = libro_id || prestamoActual.libro_id;
+        const finalFechaInicio = fecha_prestamo || prestamoActual.fecha_prestamo;
+        
+        //  RECALCULAR FECHA DE DEVOLUCIÓN
+        // Si cambió la fecha de inicio, sumamos 14 días automáticamente
+        let finalFechaDevolucion = prestamoActual.fecha_devolucion_esperada;
+        
+        if (fecha_prestamo && fecha_prestamo !== prestamoActual.fecha_prestamo) {
+            const d = new Date(fecha_prestamo);
+            d.setDate(d.getDate() + 14); // Regla de negocio: 14 días de préstamo
+            finalFechaDevolucion = d.toISOString().split('T')[0];
+        }
 
+        //  ACTUALIZAR EN BASE DE DATOS
         await db.query(
             'UPDATE prestamos SET cliente_id = ?, libro_id = ?, fecha_prestamo = ?, fecha_devolucion_esperada = ? WHERE id = ?',
-            [nuevoClienteId, nuevoLibroId, nuevaFechaPrestamo, nuevaFechaDevolucion, id]
+            [finalCliente, finalLibro, finalFechaInicio, finalFechaDevolucion, id]
         );
 
-        res.json({
-            message: 'Préstamo actualizado exitosamente',
-            id,
-            cliente_id: nuevoClienteId,
-            libro_id: nuevoLibroId
-        });
+        res.json({ message: 'Préstamo actualizado exitosamente' });
 
     } catch (err) {
         console.error('Error en updatePrestamo:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Error interno del servidor: ' + err.message });
     }
 };
-
 //get consultas de prestamos por cliente (historial completo)
 exports.getPrestamosByClienteId = async (req, res) => {
     try {
