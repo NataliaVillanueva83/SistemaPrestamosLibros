@@ -1,6 +1,10 @@
 let prestamosGlobal = [];
 
-document.addEventListener('DOMContentLoaded', cargarPrestamos);
+document.addEventListener('DOMContentLoaded', () => {
+    cargarPrestamos();
+    cargarClientesSelect();
+    cargarLibrosSelect();
+});
 
 // CARGAR LISTA
 async function cargarPrestamos() {
@@ -66,16 +70,27 @@ function renderizarTabla(lista) {
 let idPrestamoTemp = null;
 
 function confirmarDevolucion(id) {
-    idPrestamoTemp = id;
-    document.getElementById('modal-confirmacion').style.display = 'block';
+    // 1. Mostrar el modal
+    const modal = document.getElementById('modal-confirmacion');
+    modal.style.display = 'block';
     
-    document.getElementById('btn-confirmar-accion').onclick = async function() {
+    // 2. Obtener el botón y CLONARLO para borrar eventos viejos
+    const oldBtn = document.getElementById('btn-confirmar-accion');
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+    
+    // 3. Asignar el nuevo evento al botón limpio
+    newBtn.onclick = async function() {
         try {
-            const res = await fetch(`${API_URL}/prestamos/${idPrestamoTemp}/devolver`, { method: 'PUT' });
+            const res = await fetch(`${API_URL}/prestamos/${id}/devolver`, { method: 'PUT' });
+            
+            modal.style.display = 'none'; // Cerrar pregunta
+
             if (res.ok) {
-                alert("✅ Libro devuelto y stock actualizado");
-                cerrarModal('modal-confirmacion');
-                cargarPrestamos(); // Recargar lista
+                mostrarExito("Libro devuelto y stock actualizado", () => {
+                    cargarPrestamos(); 
+                    cargarLibrosSelect();
+                });
             } else {
                 alert("❌ Error al procesar la devolución");
             }
@@ -102,9 +117,11 @@ async function guardarEdicionPrestamo(e) {
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({ fecha_prestamo: fecha })
         });
-        alert('✅ Fecha corregida');
-        cerrarModal('modal-editar-prestamo');
-        cargarPrestamos();
+       document.getElementById('modal-editar-prestamo').style.display = 'none';
+        
+        mostrarExito("Fecha corregida correctamente", () => {
+            cargarPrestamos();
+        });
     } catch(err) { alert('Error al editar'); }
 }
 
@@ -119,4 +136,88 @@ function filtrarPrestamos() {
         p.libro_titulo.toLowerCase().includes(texto)
     );
     renderizarTabla(filtrados);
+}
+function mostrarExito(mensaje, callback) {
+    const modal = document.getElementById('modal-exito');
+    if (modal) {
+        document.getElementById('mensaje-exito').innerText = mensaje;
+        modal.style.display = 'block';
+        
+        
+        document.getElementById('btn-cerrar-exito').onclick = function() {
+            modal.style.display = 'none';
+            if (callback) callback();
+        };
+    } else {
+        // Por si acaso no se cargó el HTML del modal
+        alert("✅ " + mensaje);
+        if (callback) callback();
+    }
+}
+async function cargarClientesSelect() {
+    try {
+        const res = await fetch(`${API_URL}/clientes`);
+        const clientes = await res.json();
+        const select = document.getElementById('prestamo-cliente-id');
+        if(select) {
+            select.innerHTML = '<option value="">-- Seleccionar Alumno --</option>';
+            clientes.forEach(c => {
+                const op = document.createElement('option');
+                op.value = c.id;
+                op.text = `${c.nombre} ${c.apellido} (DNI: ${c.dni})`;
+                select.appendChild(op);
+            });
+        }
+    } catch (e) { console.error(e); }
+}
+
+function abrirModalPrestamo() {
+    document.getElementById('modal-prestamo').style.display = 'block';
+    document.getElementById('prestamo-fecha').valueAsDate = new Date();
+}
+
+async function guardarPrestamo(e) {
+    e.preventDefault();
+    const d = {
+        id_libro: document.getElementById('prestamo-libro-id').value,
+        id_cliente: document.getElementById('prestamo-cliente-id').value,
+        fecha_prestamo: document.getElementById('prestamo-fecha').value
+    };
+    
+    try {
+        const res = await fetch(`${API_URL}/prestamos`, { 
+            method: 'POST', 
+            headers: {'Content-Type':'application/json'}, 
+            body: JSON.stringify(d)
+        });
+        
+        if(res.ok) { 
+            document.getElementById('modal-prestamo').style.display = 'none';
+            mostrarExito("Préstamo registrado exitosamente", () => {
+                cargarPrestamos();
+                cargarLibrosSelect();
+            });
+        } else { 
+            const err = await res.json(); 
+            alert("Error: " + (err.error || "No se pudo prestar. Revisa el ID del libro o el stock.")); 
+        }
+    } catch(err) { console.error(err); alert("Error de conexión"); }
+}
+async function cargarLibrosSelect() {
+    try {
+        // Pedimos solo los disponibles
+        const res = await fetch(`${API_URL}/libros?soloDisponibles=true`);
+        const libros = await res.json();
+        
+        const select = document.getElementById('prestamo-libro-id');
+        if(select) {
+            select.innerHTML = '<option value="">-- Seleccionar Libro --</option>';
+            libros.forEach(l => {
+                const option = document.createElement('option');
+                option.value = l.id;
+                option.text = `${l.titulo} - ${l.autor}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (e) { console.error(e); }
 }
