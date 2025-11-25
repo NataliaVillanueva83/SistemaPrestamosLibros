@@ -29,14 +29,21 @@ exports.getPrestamos = async (req, res) => {
 exports.getPrestamoById = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        if (isNaN(id) || id <= 0) {
-            return res.status(400).json({ error: 'ID inválido' });
-        }
+        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
 
-        const [rows] = await db.query(
-            'SELECT * FROM prestamos WHERE id = ?',
-            [id]
-        );
+       
+        const query = `
+            SELECT 
+                p.id, p.fecha_prestamo, p.fecha_devolucion_esperada, p.fecha_devolucion_real, p.estado,
+                l.id AS libro_id, l.titulo, l.autor, l.imagen_url, l.genero,
+                c.id AS cliente_id, c.nombre, c.apellido, c.dni, c.email, c.telefono
+            FROM prestamos p
+            JOIN libros l ON p.libro_id = l.id
+            JOIN clientes c ON p.cliente_id = c.id
+            WHERE p.id = ?
+        `;
+
+        const [rows] = await db.query(query, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Préstamo no encontrado' });
@@ -48,7 +55,6 @@ exports.getPrestamoById = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
 //POST /prestamos/ : crear un nuevo préstamo
 exports.createPrestamo = async (req, res) => {
 

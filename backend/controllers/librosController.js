@@ -49,7 +49,7 @@ exports.getLibroById = async (req, res) => {
 // Post /libros/ : crear un nuevo libro
 exports.createLibro = async (req, res) => {
     try {
-        const { titulo, autor, genero, isbn, precio, ejemplares_totales } = req.body;
+        const { titulo, autor, genero, isbn, precio, ejemplares_totales, imagen_url } = req.body;
         
         //  Validar campos obligatorios
         if (!titulo || titulo.trim().length === 0) {
@@ -68,6 +68,7 @@ exports.createLibro = async (req, res) => {
         const generoLimpio = genero ? genero.trim() : null;
         const isbnLimpio = isbn ? isbn.trim() : null;
         const precioNumerico = precio ? parseFloat(precio) : null;
+        const imagenUrlLimpia = imagen_url ? imagen_url.trim() : null;
         
         const ejemplaresNum = ejemplares_totales ? parseInt(ejemplares_totales) : 1;
 
@@ -88,8 +89,8 @@ exports.createLibro = async (req, res) => {
         
         const sql = `
             INSERT INTO libros 
-            (titulo, autor, genero, isbn, precio, ejemplares_totales, ejemplares_disponibles) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (titulo, autor, genero, isbn, precio, ejemplares_totales, ejemplares_disponibles, imagen_url) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
         
         const [result] = await db.query(sql, [
@@ -99,7 +100,8 @@ exports.createLibro = async (req, res) => {
             isbnLimpio,
             precioNumerico,
             ejemplaresNum,
-            ejemplaresNum 
+            ejemplaresNum ,
+            imagenUrlLimpia
         ]);
         
         //  Devolver el objeto creado completo
@@ -125,90 +127,66 @@ exports.createLibro = async (req, res) => {
 };
 
 // Update /libros/:id : actualizar un libro existente
+
 exports.updateLibro = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const { titulo, autor, genero, precio, ejemplares_totales } = req.body;
+        const { titulo, autor, genero, isbn, precio, ejemplares_totales, imagen_url } = req.body;
         
-        //  Validar ID
-        if (isNaN(id) || id <= 0) {
-            return res.status(400).json({ error: 'ID inválido' });
+        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+        
+        // 1. Obtener datos actuales
+        const [libroActual] = await db.query('SELECT * FROM libros WHERE id = ? AND activo = TRUE', [id]);
+        if (libroActual.length === 0) return res.status(404).json({ error: 'Libro no encontrado' });
+        
+        const libro = libroActual[0];
+
+        // 2. Preparar valores (usando los nuevos o manteniendo los viejos)
+        const nuevoTitulo = titulo ? titulo.trim() : libro.titulo;
+        const nuevoAutor = autor ? autor.trim() : libro.autor;
+        const nuevoGenero = genero !== undefined ? genero : libro.genero;
+        const nuevoIsbn = isbn !== undefined ? isbn : libro.isbn;
+        const nuevoPrecio = precio !== undefined ? parseFloat(precio) : libro.precio;
+        const nuevaImagen = imagen_url !== undefined ? imagen_url : libro.imagen_url;
+        
+        let nuevosTotales = libro.ejemplares_totales;
+        let nuevosDisponibles = libro.ejemplares_disponibles;
+
+        // 3. Calcular stock si cambia
+        if (ejemplares_totales !== undefined && ejemplares_totales != libro.ejemplares_totales) {
+            const cant = parseInt(ejemplares_totales);
+            const diferencia = cant - libro.ejemplares_totales;
+            nuevosTotales = cant;
+            nuevosDisponibles = Math.max(0, libro.ejemplares_disponibles + diferencia);
         }
+
+        // 4. CONSULTA SQL CORREGIDA (Todo con ?)
+        const sql = `
+            UPDATE libros 
+            SET titulo=?, autor=?, genero=?, isbn=?, precio=?, 
+                ejemplares_totales=?, ejemplares_disponibles=?, imagen_url=?
+            WHERE id=? AND activo=TRUE
+        `;
+
+        const params = [
+            nuevoTitulo, 
+            nuevoAutor, 
+            nuevoGenero, 
+            nuevoIsbn, 
+            nuevoPrecio, 
+            nuevosTotales, 
+            nuevosDisponibles, 
+            nuevaImagen, 
+            id
+        ];
         
-        // Verificar que el libro existe
-        const [libroActual] = await db.query(
-            'SELECT * FROM libros WHERE id = ? AND activo = TRUE',
-            [id]
-        );
+        await db.query(sql, params);
         
-        if (libroActual.length === 0) {
-            return res.status(404).json({ error: 'Libro no encontrado' });
-        }
-        
-        //  Validar campos si se proporcionan
-        if (titulo && titulo.trim().length === 0) {
-            return res.status(400).json({ error: 'El título no puede estar vacío' });
-        }
-        
-        if (autor && autor.trim().length === 0) {
-            return res.status(400).json({ error: 'El autor no puede estar vacío' });
-        }
-        
-        // Sanitizar datos
-        const tituloLimpio = titulo ? titulo.trim() : libroActual[0].titulo;
-        const autorLimpio = autor ? autor.trim() : libroActual[0].autor;
-        const generoLimpio = genero !== undefined ? (genero ? genero.trim() : null) : libroActual[0].genero;
-        const precioNumerico = precio !== undefined ? (precio ? parseFloat(precio) : null) : libroActual[0].precio;
-        
-        //  Si cambia ejemplares_totales, ajustar disponibles
-        let sql;
-        let params;
-        
-        if (ejemplares_totales && ejemplares_totales !== libroActual[0].ejemplares_totales) {
-            const ejemplaresNum = parseInt(ejemplares_totales);
-            
-            if (ejemplaresNum < 1) {
-                return res.status(400).json({ error: 'Debe haber al menos 1 ejemplar' });
-            }
-            
-            // Calcular diferencia
-            const diferencia = ejemplaresNum - libroActual[0].ejemplares_totales;
-            const nuevosDisponibles = Math.max(0, libroActual[0].ejemplares_disponibles + diferencia);
-            
-            sql = `
-                UPDATE libros 
-                SET titulo=?, autor=?, genero=?, precio=?, 
-                    ejemplares_totales=?, ejemplares_disponibles=?
-                WHERE id=? AND activo=TRUE
-            `;
-            params = [tituloLimpio, autorLimpio, generoLimpio, precioNumerico, ejemplaresNum, nuevosDisponibles, id];
-        } else {
-            sql = `
-                UPDATE libros 
-                SET titulo=?, autor=?, genero=?, precio=? 
-                WHERE id=? AND activo=TRUE
-            `;
-            params = [tituloLimpio, autorLimpio, generoLimpio, precioNumerico, id];
-        }
-        
-        const [result] = await db.query(sql, params);
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Libro no encontrado' });
-        }
-        
-        // ✅ MEJORA: Devolver el libro actualizado
-        const [libroActualizado] = await db.query(
-            'SELECT * FROM libros WHERE id = ?',
-            [id]
-        );
-        
-        res.json({ 
-            message: 'Libro actualizado exitosamente',
-            data: libroActualizado[0]
-        });
+        res.json({ message: 'Libro actualizado exitosamente' });
+
     } catch (err) {
         console.error('Error en updateLibro:', err);
+        if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Ese ISBN ya existe' });
         res.status(500).json({ error: err.message });
     }
 };

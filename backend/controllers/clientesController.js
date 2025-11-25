@@ -86,27 +86,37 @@ exports.updateCliente = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-    //DELETE /clientes/:id : eliminar un cliente
+// DELETE /clientes/:id (VERSIÓN CORREGIDA QUE EVITA EL ERROR)
 exports.deleteCliente = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        if (isNaN(id) || id <= 0) {
-            return res.status(400).json({ error: 'ID inválido' });
-        }
+        if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
 
-        const [result] = await db.query(
-            'DELETE FROM clientes WHERE id = ?',
+        
+        // Si tiene libros en su poder (activos), NO dejamos borrar.
+        const [activos] = await db.query(
+            'SELECT COUNT(*) as c FROM prestamos WHERE cliente_id = ? AND estado = "activo"', 
             [id]
         );
+        
+        if (activos[0].c > 0) {
+            return res.status(400).json({ error: "No se puede eliminar: El alumno tiene libros sin devolver." });
+        }
+
+        // Borramos manualmente el historial antiguo (devuelto) para que la base de datos nos deje borrar al cliente.
+        await db.query('DELETE FROM prestamos WHERE cliente_id = ?', [id]);
+
+        //  ELIMINAR CLIENTE
+        const [result] = await db.query('DELETE FROM clientes WHERE id = ?', [id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Cliente no encontrado' });
         }
 
-        res.status(204).send();
+        res.json({ message: 'Cliente eliminado correctamente' });
+
     } catch (err) {
         console.error('Error en deleteCliente:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Error interno del servidor al eliminar.' });
     }   
 };
-   
