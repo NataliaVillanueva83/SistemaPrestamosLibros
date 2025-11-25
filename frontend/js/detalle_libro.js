@@ -168,3 +168,46 @@ function mostrarExito(mensaje, callback) {
         if (callback) callback();
     }
 }
+// --- LÓGICA DE ELIMINACIÓN ---
+
+
+function eliminarLibroActual() {
+    document.getElementById('modal-confirmar-borrado').style.display = 'block';
+}
+
+
+async function confirmarEliminacionLibro() {
+    // Obtenemos el ID del input oculto
+    const id = document.getElementById('libro-id').value;
+    
+    // Cerramos el modal de pregunta
+    document.getElementById('modal-confirmar-borrado').style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_URL}/libros/${id}`, { method: 'DELETE' });
+        
+        if (res.ok) {
+            // Si sale bien, mostramos éxito y volvemos al listado
+            mostrarExito("Libro eliminado del inventario.", () => {
+                window.location.href = 'libros.html';
+            });
+        } else {
+            // Si sale mal (ej: tiene préstamos activos), mostramos el error del backend
+            const data = await res.json();
+            mostrarAlerta(data.error || "No se pudo eliminar el libro.");
+        }
+    } catch (e) { 
+        console.error(e);
+        mostrarAlerta("Error de conexión con el servidor"); 
+    }
+}
+function mostrarAlerta(mensaje) {
+    const modal = document.getElementById('modal-alerta');
+    if (modal) {
+        document.getElementById('mensaje-alerta').innerText = mensaje;
+        modal.style.display = 'block';
+    } else {
+        // Respaldo por si no existe el modal en el HTML
+        alert("⚠️ " + mensaje);
+    }
+}
